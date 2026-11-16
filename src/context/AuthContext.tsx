@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from "react";
 import { 
   onAuthStateChanged, 
   User as FirebaseUser,
@@ -21,6 +21,8 @@ interface AuthContextType {
   userProfile: UserProfile | null;
   loading: boolean;
   signOut: () => Promise<void>;
+  logout: () => Promise<void>;          // Ditambahkan sebagai alias untuk mengatasi error Navbar
+  refreshProfile: () => Promise<void>;  // Ditambahkan agar AuthContext mendukung refreshProfile
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -28,6 +30,8 @@ const AuthContext = createContext<AuthContextType>({
   userProfile: null,
   loading: true,
   signOut: async () => {},
+  logout: async () => {},
+  refreshProfile: async () => {},
 });
 
 // ==========================================
@@ -35,7 +39,7 @@ const AuthContext = createContext<AuthContextType>({
 // ==========================================
 const ADMIN_WHITELIST = [
   "admin@trexskateschool.com",
-  "krisnaoktaria.com", // Masukkan email Anda di sini
+  "krisnaoktaria@gmail.com",
 ];
 
 const COACH_WHITELIST = [
@@ -47,49 +51,50 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchUserProfile = useCallback(async (user: FirebaseUser) => {
+    try {
+      const userRef = doc(db, "users", user.uid);
+      const userSnap = await getDoc(userRef);
+
+      let role: "admin" | "coach" | "parent" = "parent";
+      
+      const lowerEmail = (user.email || "").toLowerCase();
+      if (ADMIN_WHITELIST.includes(lowerEmail)) {
+        role = "admin";
+      } else if (COACH_WHITELIST.includes(lowerEmail)) {
+        role = "coach";
+      }
+
+      if (userSnap.exists()) {
+        const data = userSnap.data() as UserProfile;
+        if (role !== "parent" && data.role !== role) {
+          await setDoc(userRef, { role }, { merge: true });
+          data.role = role;
+        }
+        setUserProfile(data);
+      } else {
+        const newProfile: UserProfile = {
+          uid: user.uid,
+          name: user.displayName || lowerEmail.split("@")[0],
+          email: user.email || "",
+          role: role,
+        };
+        await setDoc(userRef, {
+          ...newProfile,
+          createdAt: serverTimestamp(),
+        });
+        setUserProfile(newProfile);
+      }
+    } catch (error) {
+      console.error("Gagal memuat profil pengguna:", error);
+    }
+  }, []);
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setFirebaseUser(user);
-      if (user && user.email) {
-        try {
-          const userRef = doc(db, "users", user.uid);
-          const userSnap = await getDoc(userRef);
-
-          let role: "admin" | "coach" | "parent" = "parent";
-          
-          // Periksa apakah email masuk dalam whitelist manual
-          const lowerEmail = user.email.toLowerCase();
-          if (ADMIN_WHITELIST.includes(lowerEmail)) {
-            role = "admin";
-          } else if (COACH_WHITELIST.includes(lowerEmail)) {
-            role = "coach";
-          }
-
-          if (userSnap.exists()) {
-            const data = userSnap.data() as UserProfile;
-            // Jika di database rolenya masih parent tapi emailnya ada di whitelist admin, paksa update jadi admin
-            if (role !== "parent" && data.role !== role) {
-              await setDoc(userRef, { role }, { merge: true });
-              data.role = role;
-            }
-            setUserProfile(data);
-          } else {
-            // Jika belum ada dokumen users, buat baru otomatis
-            const newProfile: UserProfile = {
-              uid: user.uid,
-              name: user.displayName || user.email.split("@")[0],
-              email: user.email,
-              role: role, // Mengikuti whitelist atau default 'parent'
-            };
-            await setDoc(userRef, {
-              ...newProfile,
-              createdAt: serverTimestamp(),
-            });
-            setUserProfile(newProfile);
-          }
-        } catch (error) {
-          console.error("Gagal memuat profil pengguna:", error);
-        }
+      if (user) {
+        await fetchUserProfile(user);
       } else {
         setUserProfile(null);
       }
@@ -97,15 +102,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => unsubscribe();
-  }, []);
+  }, [fetchUserProfile]);
 
   const signOut = async () => {
     await fbSignOut(auth);
     setUserProfile(null);
   };
 
+  const refreshProfile = async () => {
+    if (firebaseUser) {
+      await fetchUserProfile(firebaseUser);
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ firebaseUser, userProfile, loading, signOut }}>
+    <AuthContext.Provider value={{ firebaseUser, userProfile, loading, signOut, logout: signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
