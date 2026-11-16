@@ -1,19 +1,14 @@
 "use client";
 
-import { useEffect, useState, FormEvent } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   collection,
-  doc,
-  getDoc,
   getDocs,
   query,
   where,
   orderBy,
   limit,
-  updateDoc,
-  arrayUnion,
-  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -57,13 +52,6 @@ export default function ParentPortalPage() {
   const [loadingChildren, setLoadingChildren] = useState(true);
   const [fetchError, setFetchError] = useState("");
   const [announcements, setAnnouncements] = useState<AnnouncementBanner[]>([]);
-
-  // State Kode Klaim (cadangan jika murid didaftarkan manual oleh Admin)
-  const [claimInput, setClaimInput] = useState("");
-  const [claiming, setClaiming] = useState(false);
-  const [claimError, setClaimError] = useState("");
-  const [claimSuccess, setClaimSuccess] = useState("");
-  const [showClaimBox, setShowClaimBox] = useState(false);
 
   // Detail data anak terpilih
   const [reports, setReports] = useState<MonthlyReport[]>([]);
@@ -206,64 +194,6 @@ export default function ParentPortalPage() {
     fetchChildRecords();
   }, [selectedChildId]);
 
-  const handleClaimStudent = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!firebaseUser) return;
-
-    const cleanCode = claimInput.trim().toUpperCase();
-    if (cleanCode.length < 4) {
-      setClaimError("Masukkan 6 karakter Kode Klaim dari Admin TREX.");
-      return;
-    }
-
-    setClaiming(true);
-    setClaimError("");
-    setClaimSuccess("");
-
-    try {
-      const codeRef = doc(db, "claimCodes", cleanCode);
-      const codeSnap = await getDoc(codeRef);
-
-      if (!codeSnap.exists()) {
-        setClaimError("Kode Klaim tidak ditemukan.");
-        setClaiming(false);
-        return;
-      }
-
-      const codeData = codeSnap.data();
-      if (codeData.isClaimed) {
-        setClaimError("Kode Klaim ini sudah pernah digunakan.");
-        setClaiming(false);
-        return;
-      }
-
-      const studentId = codeData.studentId as string;
-
-      await updateDoc(doc(db, "students", studentId), {
-        parentUids: arrayUnion(firebaseUser.uid),
-        updatedAt: serverTimestamp(),
-      });
-
-      await updateDoc(codeRef, {
-        isClaimed: true,
-        claimedBy: firebaseUser.uid,
-      });
-
-      setClaimInput("");
-      setShowClaimBox(false);
-      setClaimSuccess(
-        `Profil ananda ${codeData.studentName} berhasil ditautkan!`
-      );
-      await fetchMyChildren();
-      setSelectedChildId(studentId);
-    } catch (error) {
-      console.error("Gagal menautkan kode klaim:", error);
-      setClaimError("Gagal memproses kode klaim.");
-    } finally {
-      setClaiming(false);
-    }
-  };
-
   const activeChild =
     children.find((c) => c.id === selectedChildId) || children[0];
 
@@ -305,17 +235,6 @@ export default function ParentPortalPage() {
                 >
                   + Daftarkan Anak
                 </Link>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowClaimBox(!showClaimBox);
-                    setClaimError("");
-                    setClaimSuccess("");
-                  }}
-                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
-                >
-                  {showClaimBox ? "Tutup Kode" : "Kode Klaim"}
-                </button>
               </div>
             </div>
 
@@ -371,47 +290,6 @@ export default function ParentPortalPage() {
               >
                 Coba Lagi
               </button>
-            </div>
-          )}
-
-          {claimSuccess && (
-            <div className="p-4 rounded-xl bg-lime-100 border border-lime-400 text-slate-950 text-sm font-bold">
-              ✓ {claimSuccess}
-            </div>
-          )}
-
-          {/* Box Kode Klaim (Opsional) */}
-          {showClaimBox && (
-            <div className="p-6 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
-              <h2 className="text-lg font-black text-slate-900">
-                Masukkan Kode Klaim dari Admin
-              </h2>
-              {claimError && (
-                <p className="text-xs text-red-700 font-semibold">
-                  {claimError}
-                </p>
-              )}
-              <form
-                onSubmit={handleClaimStudent}
-                className="flex flex-col sm:flex-row gap-3"
-              >
-                <input
-                  type="text"
-                  maxLength={8}
-                  required
-                  value={claimInput}
-                  onChange={(e) => setClaimInput(e.target.value.toUpperCase())}
-                  placeholder="CONTOH: TRX8K2"
-                  className="flex-1 px-4 py-3 rounded-xl border border-slate-300 font-mono text-base font-black uppercase"
-                />
-                <button
-                  type="submit"
-                  disabled={claiming}
-                  className="px-5 py-3 rounded-xl bg-slate-900 text-lime-400 font-extrabold text-sm"
-                >
-                  {claiming ? "Memproses..." : "Tautkan"}
-                </button>
-              </form>
             </div>
           )}
 
