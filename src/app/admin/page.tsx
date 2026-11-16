@@ -56,38 +56,44 @@ export default function AdminDashboardPage() {
     {
       title: "Data Murid & Kode Klaim",
       desc: "Tambah murid baru, generate kode tautan orang tua, dan atur coach pembina.",
-      badge: "Fase 4",
-      status: "Segera Aktif",
+      badge: "Aktif",
+      href: "/admin/students",
+      active: true,
     },
     {
-      title: "Jadwal & Absensi Sabtu",
-      desc: "Kelola sesi latihan 16.00–18.00 WIB, libur nasional, dan rekap kehadiran.",
-      badge: "Fase 4 & 5",
-      status: "Segera Aktif",
+      title: "Tim Coach & Hak Akses",
+      desc: "Atur profil pelatih, berikan izin login akun coach, dan kelola tim lapangan.",
+      badge: "Aktif",
+      href: "/admin/coaches",
+      active: true,
+    },
+    {
+      title: "Jadwal Sabtu & Kurikulum",
+      desc: "Buat sesi latihan Sabtu 16.00–18.00 WIB dan sinkronkan 8 materi skill.",
+      badge: "Aktif",
+      href: "/admin/schedules",
+      active: true,
+    },
+    {
+      title: "Absensi & Evaluasi Lapangan",
+      desc: "Masuk ke mode Coach untuk mencatat kehadiran dan skor perkembangan murid.",
+      badge: "Fase 5",
+      href: "/coach",
+      active: false,
     },
     {
       title: "Verifikasi Pembayaran",
       desc: "Periksa bukti transfer pendaftaran & daftar ulang, lalu aktifkan status murid.",
       badge: "Fase 7",
-      status: "Segera Aktif",
-    },
-    {
-      title: "Rapor Bulanan & Publikasi",
-      desc: "Tinjau catatan evaluasi coach dan terbitkan rapor PDF ke portal wali.",
-      badge: "Fase 5 & 6",
-      status: "Segera Aktif",
-    },
-    {
-      title: "Tim Coach & Kurikulum",
-      desc: "Atur profil pelatih, hak akses akun coach, dan daftar materi keterampilan.",
-      badge: "Fase 4",
-      status: "Segera Aktif",
+      href: "/admin",
+      active: false,
     },
     {
       title: "Kompetisi & Pengumuman",
       desc: "Publikasikan agenda kejuaraan sepatu roda dan pengumuman penting klub.",
       badge: "Fase 8",
-      status: "Segera Aktif",
+      href: "/admin",
+      active: false,
     },
   ];
 
@@ -165,18 +171,31 @@ export default function AdminDashboardPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {adminModules.map((mod) => (
-              <div
+              <Link
                 key={mod.title}
-                className="p-5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between"
+                href={mod.href}
+                className={`p-5 rounded-2xl bg-white border transition-all flex flex-col justify-between ${
+                  mod.active
+                    ? "border-slate-300 hover:border-lime-500 shadow-xs"
+                    : "border-slate-200/80 opacity-75"
+                }`}
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-md bg-slate-900 text-lime-400">
+                    <span
+                      className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
+                        mod.active
+                          ? "bg-lime-400 text-slate-950"
+                          : "bg-slate-900 text-lime-400"
+                      }`}
+                    >
                       {mod.badge}
                     </span>
-                    <span className="text-[11px] font-semibold text-slate-400">
-                      {mod.status}
-                    </span>
+                    {mod.active && (
+                      <span className="text-xs font-extrabold text-slate-900">
+                        Buka →
+                      </span>
+                    )}
                   </div>
                   <h3 className="text-base font-extrabold text-slate-900">
                     {mod.title}
@@ -185,7 +204,7 @@ export default function AdminDashboardPage() {
                     {mod.desc}
                   </p>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
