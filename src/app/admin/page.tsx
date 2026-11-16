@@ -34,6 +34,12 @@ export default function AdminDashboardPage() {
 
   const adminModules = [
     {
+      title: "Pendaftaran Akun Baru",
+      desc: "Buat akun manual baru untuk Coach, Admin, atau Wali murid dari panel admin.",
+      badge: "Baru",
+      href: "/admin/register",
+    },
+    {
       title: "Data Murid & Kode Klaim",
       desc: "Kelola profil anggota, status aktif murid, dan kode tautan wali murid.",
       badge: "Aktif",
