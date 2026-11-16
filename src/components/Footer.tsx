@@ -5,7 +5,7 @@ export default function Footer() {
     <footer className="bg-slate-950 text-slate-300 border-t border-slate-800">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {/* Kolom 1: Identitas TREX Skate School (Tetap) */}
+          {/* Kolom 1: Identitas TREX Skate School */}
           <div className="space-y-3">
             <div className="flex items-center gap-3">
               <span className="w-10 h-10 rounded-full bg-lime-400 text-slate-950 font-black text-sm flex items-center justify-center shrink-0">
@@ -20,7 +20,7 @@ export default function Footer() {
             </p>
           </div>
 
-          {/* Kolom 2: Jadwal Latihan Rutin (Tetap) */}
+          {/* Kolom 2: Jadwal Latihan Rutin */}
           <div className="space-y-3">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-white">
               JADWAL LATIHAN RUTIN
@@ -38,7 +38,7 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Kolom 3: Navigasi (Diperbaiki agar bisa diklik) */}
+          {/* Kolom 3: Navigasi */}
           <div className="space-y-3">
             <h3 className="text-xs font-extrabold uppercase tracking-wider text-white">
               NAVIGASI
@@ -60,27 +60,11 @@ export default function Footer() {
                   Materi Keterampilan
                 </Link>
               </li>
-              <li>
-                <Link
-                  href="/coaches"
-                  className="hover:text-lime-400 transition-colors"
-                >
-                  Profil Tim Coach
-                </Link>
-              </li>
-              <li>
-                <Link
-                  href="/competitions"
-                  className="hover:text-lime-400 transition-colors"
-                >
-                  Agenda Kompetisi
-                </Link>
-              </li>
             </ul>
           </div>
         </div>
 
-        {/* Baris Copyright Bawah (Tetap) */}
+        {/* Baris Copyright Bawah */}
         <div className="mt-10 pt-6 border-t border-slate-800/80 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 text-xs text-slate-400">
           <p>© 2026 TREX Skate School. All rights reserved.</p>
           <p>Digital Management &amp; Student Progress System</p>
