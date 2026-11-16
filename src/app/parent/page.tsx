@@ -122,7 +122,7 @@ export default function ParentPortalPage() {
     } catch (error) {
       console.error("Gagal memuat profil anak:", error);
       setFetchError(
-        "Gagal membaca data anak dari database. Pastikan Firestore Rules sudah dipublikasikan."
+        "Gagal membaca data anak dari database. Periksa koneksi Anda."
       );
     } finally {
       setLoadingChildren(false);
@@ -225,27 +225,29 @@ export default function ParentPortalPage() {
       const codeSnap = await getDoc(codeRef);
 
       if (!codeSnap.exists()) {
-        setClaimError("Kode Klaim tidak ditemukan di sistem.");
+        setClaimError("Kode Klaim tidak ditemukan. Periksa kembali huruf dan angkanya.");
         setClaiming(false);
         return;
       }
 
       const codeData = codeSnap.data();
-      if (codeData.isClaimed) {
-        setClaimError("Kode Klaim ini sudah pernah digunakan.");
+
+      // Periksa apakah sudah diklaim oleh ORANG LAIN (bukan user ini)
+      if (codeData.isClaimed && codeData.claimedBy && codeData.claimedBy !== firebaseUser.uid) {
+        setClaimError("Kode Klaim ini sudah pernah digunakan oleh akun lain.");
         setClaiming(false);
         return;
       }
 
       const studentId = codeData.studentId as string;
 
-      // Tautkan akun orang tua ke dokumen murid
+      // 1. Tautkan akun orang tua ke dokumen murid di koleksi 'students'
       await updateDoc(doc(db, "students", studentId), {
         parentUids: arrayUnion(firebaseUser.uid),
         updatedAt: serverTimestamp(),
       });
 
-      // Tandai kode klaim sudah terpakai
+      // 2. Tandai kode klaim sudah sukses terpakai oleh user ini
       await updateDoc(codeRef, {
         isClaimed: true,
         claimedBy: firebaseUser.uid,
@@ -254,13 +256,15 @@ export default function ParentPortalPage() {
       setClaimInput("");
       setShowClaimBox(false);
       setClaimSuccess(
-        `Profil ananda ${codeData.studentName} berhasil diklaim dan masuk dashboard!`
+        `Berhasil! Profil ananda ${codeData.studentName} kini terhubung ke dashboard.`
       );
+      
+      // Muat ulang daftar anak
       await fetchMyChildren();
       setSelectedChildId(studentId);
     } catch (error) {
       console.error("Gagal menautkan kode klaim:", error);
-      setClaimError("Gagal memproses klaim anak. Periksa koneksi Anda.");
+      setClaimError("Gagal memproses klaim anak. Periksa koneksi internet Anda.");
     } finally {
       setClaiming(false);
     }
@@ -310,7 +314,7 @@ export default function ParentPortalPage() {
                   }}
                   className="text-xs font-bold px-3 py-1.5 rounded-lg bg-lime-400 hover:bg-lime-300 text-slate-950 transition-colors"
                 >
-                  {showClaimBox ? "Tutup Kolom Klaim" : "+ Klaim Anak (Kode)"}
+                  {showClaimBox ? "Tutup Kolom Klaim" : "+ Masukkan Kode Klaim Anak"}
                 </button>
               </div>
             </div>
@@ -334,10 +338,10 @@ export default function ParentPortalPage() {
                   HUBUNGKAN PROFIL ANAK
                 </span>
                 <h2 className="text-lg font-black text-slate-900 mt-2">
-                  Masukkan 6 Karakter Kode Klaim
+                  Masukkan Kode Klaim dari Admin
                 </h2>
                 <p className="text-xs text-slate-600 mt-0.5">
-                  Jika data anak belum tampil otomatis, masukkan kode klaim yang diberikan oleh Admin untuk mengakses dashboard anak.
+                  Ketik 6 karakter kode yang dikirimkan oleh Admin klub untuk langsung mengakses dashboard perkembangan anak Anda.
                 </p>
               </div>
 
@@ -431,8 +435,7 @@ export default function ParentPortalPage() {
                 Belum Ada Data Anak di Akun Ini
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Jika Anda memiliki kode klaim dari Admin, silakan ketuk tombol{" "}
-                <strong>+ Klaim Anak (Kode)</strong> di atas untuk masuk ke dashboard.
+                Silakan masukkan kode klaim yang dikirimkan oleh Admin klub dengan mengetuk tombol di bawah ini.
               </p>
 
               <div className="flex flex-wrap gap-3 pt-1">
