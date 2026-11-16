@@ -1,3 +1,5 @@
+import Link from "next/link";
+
 export default function HomePage() {
   const skills = [
     {
@@ -66,51 +68,38 @@ export default function HomePage() {
       <section className="relative bg-slate-900 text-white overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(163,230,53,0.16),_transparent_50%)]" />
         <div className="relative max-w-6xl mx-auto px-4 sm:px-6 pt-10 pb-16 md:py-20">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-10">
-            <div className="max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/90 border border-slate-700 text-lime-400 text-xs font-bold tracking-wide mb-6">
-                <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
-                LATIHAN RUTIN • SABTU 16.00 – 18.00 WIB
-              </div>
-
-              <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
-                Latih Keseimbangan, Keberanian, dan Teknik{" "}
-                <span className="text-lime-400">Sepatu Roda Anak</span> Secara
-                Terukur.
-              </h1>
-
-              <p className="mt-4 text-base sm:text-lg text-slate-300 leading-relaxed">
-                Selamat datang di portal digital{" "}
-                <strong className="text-white">TREX Skate School</strong>. Orang
-                tua dapat memantau catatan evaluasi latihan setiap Sabtu dan
-                mengunduh rapor bulanan anak secara privat.
-              </p>
-
-              <div className="mt-8 flex flex-col sm:flex-row gap-3.5">
-                <a
-                  href="#akses-portal"
-                  className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-lime-400 text-slate-950 font-extrabold text-sm sm:text-base hover:bg-lime-300 transition-colors shadow-lg shadow-lime-400/15"
-                >
-                  Masuk Portal Wali &amp; Coach
-                </a>
-                <a
-                  href="#kurikulum"
-                  className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-slate-800 text-white font-semibold text-sm sm:text-base border border-slate-700 hover:bg-slate-700 transition-colors"
-                >
-                  Lihat Materi Latihan
-                </a>
-              </div>
+          <div className="max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-800/90 border border-slate-700 text-lime-400 text-xs font-bold tracking-wide mb-6">
+              <span className="w-2 h-2 rounded-full bg-lime-400 animate-pulse" />
+              LATIHAN RUTIN • SABTU 16.00 – 18.00 WIB
             </div>
 
-            {/* Official Emblem Showcase */}
-            <div className="flex justify-center lg:justify-end shrink-0">
-              <div className="relative w-44 h-44 sm:w-56 sm:h-56 rounded-full overflow-hidden bg-white ring-4 ring-lime-400 shadow-2xl shadow-lime-400/15">
-                <img
-                  src="/logo.jpg"
-                  alt="Emblem Resmi TREX Skate School"
-                  className="w-full h-full object-cover scale-[1.14]"
-                />
-              </div>
+            <h1 className="text-3xl sm:text-5xl font-black tracking-tight leading-tight">
+              Latih Keseimbangan, Keberanian, dan Teknik{" "}
+              <span className="text-lime-400">Sepatu Roda Anak</span> Secara
+              Terukur.
+            </h1>
+
+            <p className="mt-4 text-base sm:text-lg text-slate-300 leading-relaxed">
+              Selamat datang di portal digital{" "}
+              <strong className="text-white">TREX Skate School</strong>. Orang
+              tua dapat memantau catatan evaluasi latihan setiap Sabtu dan
+              mengunduh rapor bulanan anak secara privat.
+            </p>
+
+            <div className="mt-8 flex flex-col sm:flex-row gap-3.5">
+              <Link
+                href="/login"
+                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-lime-400 text-slate-950 font-extrabold text-sm sm:text-base hover:bg-lime-300 transition-colors shadow-lg shadow-lime-400/15"
+              >
+                Masuk Portal Wali &amp; Coach
+              </Link>
+              <a
+                href="#kurikulum"
+                className="inline-flex items-center justify-center px-6 py-3.5 rounded-xl bg-slate-800 text-white font-semibold text-sm sm:text-base border border-slate-700 hover:bg-slate-700 transition-colors"
+              >
+                Lihat Materi Latihan
+              </a>
             </div>
           </div>
 
@@ -353,13 +342,12 @@ export default function HomePage() {
               </div>
 
               <div className="mt-6">
-                <button
-                  type="button"
-                  disabled
-                  className="w-full py-3.5 px-5 rounded-xl bg-lime-400/90 text-slate-950 font-extrabold text-sm cursor-not-allowed opacity-90"
+                <Link
+                  href="/login"
+                  className="block w-full text-center py-3.5 px-5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-extrabold text-sm transition-colors shadow-sm"
                 >
-                  Login Portal (Aktif di Fase 2 &amp; 3)
-                </button>
+                  Masuk atau Daftar Akun Portal
+                </Link>
               </div>
             </div>
           </div>
