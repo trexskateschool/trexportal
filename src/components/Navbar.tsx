@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useAuth } from "@/context/AuthContext";
+import BrandLogo from "@/components/BrandLogo";
+import PwaInstaller from "@/components/PwaInstaller";
 
 export default function Navbar() {
   const { firebaseUser, userProfile, logout } = useAuth();
@@ -9,10 +11,8 @@ export default function Navbar() {
   return (
     <header className="bg-slate-900 border-b border-slate-800 text-white sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
-        <Link href="/" className="flex items-center gap-2 shrink-0">
-          <span className="px-2.5 py-1 rounded-lg bg-lime-400 text-slate-950 font-black text-sm tracking-wider">
-            TX
-          </span>
+        <Link href="/" className="flex items-center gap-2.5 shrink-0">
+          <BrandLogo size="sm" />
           <span className="font-black text-sm sm:text-base tracking-tight hidden sm:inline">
             TREX SKATE SCHOOL
           </span>
@@ -27,9 +27,11 @@ export default function Navbar() {
           </Link>
         </nav>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
+          <PwaInstaller />
+
           {firebaseUser ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <span className="text-xs font-bold text-slate-300 hidden lg:inline">
                 {userProfile?.name || firebaseUser.email}
               </span>
