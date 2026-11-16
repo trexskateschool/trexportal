@@ -7,9 +7,8 @@ import {
   doc,
   getDocs,
   setDoc,
+  updateDoc,
   deleteDoc,
-  orderBy,
-  query,
   serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
@@ -21,6 +20,7 @@ interface CoachProfile {
   email: string;
   phone: string;
   specialty: string;
+  bio: string;
 }
 
 export default function AdminCoachesPage() {
@@ -28,18 +28,19 @@ export default function AdminCoachesPage() {
   const [loading, setLoading] = useState(true);
 
   // Form state
+  const [editingId, setEditingId] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [specialty, setSpecialty] = useState("Speed & Slalom Dasar");
+  const [bio, setBio] = useState("");
   const [saving, setSaving] = useState(false);
+  const [successMsg, setSuccessMsg] = useState("");
 
   const loadCoaches = async () => {
     setLoading(true);
     try {
-      const snap = await getDocs(
-        query(collection(db, "coaches"), orderBy("name", "asc"))
-      );
+      const snap = await getDocs(collection(db, "coaches"));
       const list: CoachProfile[] = [];
       snap.forEach((d) => {
         list.push({
@@ -47,6 +48,7 @@ export default function AdminCoachesPage() {
           ...(d.data() as Omit<CoachProfile, "id">),
         });
       });
+      list.sort((a, b) => a.name.localeCompare(b.name));
       setCoaches(list);
     } catch (error) {
       console.error("Gagal memuat tim coach:", error);
@@ -59,37 +61,69 @@ export default function AdminCoachesPage() {
     loadCoaches();
   }, []);
 
-  const handleAddCoach = async (e: FormEvent) => {
+  const resetForm = () => {
+    setEditingId(null);
+    setName("");
+    setEmail("");
+    setPhone("");
+    setSpecialty("Speed & Slalom Dasar");
+    setBio("");
+  };
+
+  const handleEditClick = (coach: CoachProfile) => {
+    setEditingId(coach.id);
+    setName(coach.name || "");
+    setEmail(coach.email || "");
+    setPhone(coach.phone || "");
+    setSpecialty(coach.specialty || "");
+    setBio(coach.bio || "");
+    setSuccessMsg("");
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !email.trim()) return;
+    if (!name.trim()) return;
     setSaving(true);
+    setSuccessMsg("");
 
     try {
-      const newRef = doc(collection(db, "coaches"));
-      await setDoc(newRef, {
+      const payload = {
         name: name.trim(),
         email: email.trim().toLowerCase(),
         phone: phone.trim(),
-        specialty,
-        createdAt: serverTimestamp(),
-      });
+        specialty: specialty.trim(),
+        bio: bio.trim(),
+        updatedAt: serverTimestamp(),
+      };
 
-      setName("");
-      setEmail("");
-      setPhone("");
+      if (editingId) {
+        await updateDoc(doc(db, "coaches", editingId), payload);
+        setSuccessMsg(`Profil ${name.trim()} berhasil diperbarui.`);
+      } else {
+        const newRef = doc(collection(db, "coaches"));
+        await setDoc(newRef, {
+          ...payload,
+          createdAt: serverTimestamp(),
+        });
+        setSuccessMsg(`Pelatih ${name.trim()} berhasil ditambahkan.`);
+      }
+
+      resetForm();
       await loadCoaches();
     } catch (error) {
       console.error("Gagal menyimpan data coach:", error);
-      alert("Gagal menambahkan pelatih.");
+      alert("Gagal menyimpan profil pelatih. Periksa Firestore Rules Anda.");
     } finally {
       setSaving(false);
     }
   };
 
   const handleDelete = async (id: string, coachName: string) => {
-    if (!window.confirm(`Hapus pelatih ${coachName}?`)) return;
+    if (!window.confirm(`Hapus profil pelatih ${coachName}?`)) return;
     try {
       await deleteDoc(doc(db, "coaches", id));
+      if (editingId === id) resetForm();
       setCoaches((prev) => prev.filter((c) => c.id !== id));
     } catch (error) {
       console.error("Gagal menghapus coach:", error);
@@ -108,23 +142,40 @@ export default function AdminCoachesPage() {
               ← Kembali ke Dashboard Admin
             </Link>
             <h1 className="text-2xl sm:text-3xl font-black mt-3">
-              Tim Coach &amp; Hak Akses Lapangan
+              Kelola Profil Tim Coach
             </h1>
             <p className="text-sm text-slate-300 mt-1">
-              Kelola daftar pelatih aktif yang bertugas mengisi absensi dan evaluasi skill hari Sabtu.
+              Tambah atau edit profil pelatih yang ditampilkan pada halaman publik Tim Coach.
             </p>
           </div>
         </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-6 space-y-6">
-          {/* Form Tambah Coach */}
+          {successMsg && (
+            <div className="p-4 rounded-xl bg-lime-100 border border-lime-400 text-slate-950 text-sm font-bold">
+              ✓ {successMsg}
+            </div>
+          )}
+
+          {/* Form Tambah / Edit Coach */}
           <form
-            onSubmit={handleAddCoach}
+            onSubmit={handleSubmit}
             className="p-5 sm:p-7 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4"
           >
-            <h2 className="text-lg font-black text-slate-900">
-              Tambah Profil Coach Baru
-            </h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-black text-slate-900">
+                {editingId ? "Edit Profil Coach" : "Tambah Profil Coach Baru"}
+              </h2>
+              {editingId && (
+                <button
+                  type="button"
+                  onClick={resetForm}
+                  className="text-xs font-bold text-slate-500 hover:text-slate-800 underline"
+                >
+                  Batal Edit
+                </button>
+              )}
+            </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -143,11 +194,24 @@ export default function AdminCoachesPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Email Akun Login *
+                  Spesialisasi / Jabatan *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={specialty}
+                  onChange={(e) => setSpecialty(e.target.value)}
+                  placeholder="Contoh: Head Coach - Speed & Slalom"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Email Akun Login (Opsional)
                 </label>
                 <input
                   type="email"
-                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="coach@email.com"
@@ -157,7 +221,7 @@ export default function AdminCoachesPage() {
 
               <div>
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Nomor WhatsApp
+                  Nomor WhatsApp (Opsional)
                 </label>
                 <input
                   type="text"
@@ -168,14 +232,15 @@ export default function AdminCoachesPage() {
                 />
               </div>
 
-              <div>
+              <div className="sm:col-span-2">
                 <label className="block text-xs font-bold text-slate-700 mb-1">
-                  Spesialisasi Latihan
+                  Deskripsi / Pengalaman Melatih (Tampil di Halaman Publik)
                 </label>
-                <input
-                  type="text"
-                  value={specialty}
-                  onChange={(e) => setSpecialty(e.target.value)}
+                <textarea
+                  rows={3}
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  placeholder="Contoh: Berpengalaman melatih atlet junior dan pembinaan teknik dasar keseimbangan anak."
                   className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-sm"
                 />
               </div>
@@ -186,24 +251,25 @@ export default function AdminCoachesPage() {
               disabled={saving}
               className="px-6 py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-extrabold text-sm transition-colors disabled:opacity-60"
             >
-              {saving ? "Menyimpan..." : "+ Tambah Tim Pelatih"}
+              {saving
+                ? "Menyimpan..."
+                : editingId
+                ? "Simpan Perubahan"
+                : "+ Tambah Profil Coach"}
             </button>
           </form>
 
           {/* Daftar Coach */}
           <div className="space-y-3">
             <h2 className="text-base font-extrabold text-slate-900">
-              Daftar Coach Aktif ({coaches.length})
+              Daftar Profil Coach ({coaches.length})
             </h2>
 
             {loading ? (
               <p className="text-sm text-slate-500">Memuat data pelatih...</p>
             ) : coaches.length === 0 ? (
-              <div className="p-6 rounded-2xl bg-white border border-slate-200 text-sm text-slate-600 space-y-1">
-                <p className="font-bold text-slate-900">Belum ada profil pelatih yang ditambahkan.</p>
-                <p className="text-xs text-slate-500">
-                  Tambahkan email coach ke dalam form di atas agar mereka dapat login dan mengakses menu absensi lapangan.
-                </p>
+              <div className="p-6 rounded-2xl bg-white border border-slate-200 text-sm text-slate-500">
+                Belum ada profil pelatih. Isi form di atas untuk menampilkan profil pelatih di website.
               </div>
             ) : (
               coaches.map((c) => (
@@ -212,23 +278,42 @@ export default function AdminCoachesPage() {
                   className="p-5 rounded-2xl bg-white border border-slate-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
                 >
                   <div className="space-y-1">
-                    <div className="flex items-center gap-2">
-                      <h3 className="text-base font-black text-slate-900">{c.name}</h3>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <h3 className="text-base font-black text-slate-900">
+                        {c.name}
+                      </h3>
                       <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-lime-200 text-slate-950 uppercase">
                         {c.specialty}
                       </span>
                     </div>
-                    <p className="text-xs text-slate-600">Email: <strong className="font-mono">{c.email}</strong></p>
-                    {c.phone && <p className="text-xs text-slate-500">WhatsApp: {c.phone}</p>}
+                    {c.bio && (
+                      <p className="text-xs text-slate-600 leading-relaxed">
+                        {c.bio}
+                      </p>
+                    )}
+                    {c.email && (
+                      <p className="text-[11px] text-slate-400 font-mono">
+                        Email: {c.email}
+                      </p>
+                    )}
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDelete(c.id, c.name)}
-                    className="px-3.5 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-bold hover:bg-red-100 self-start shrink-0"
-                  >
-                    Hapus
-                  </button>
+                  <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleEditClick(c)}
+                      className="px-3.5 py-1.5 rounded-lg bg-slate-900 text-lime-400 text-xs font-bold hover:bg-slate-800"
+                    >
+                      Edit
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDelete(c.id, c.name)}
+                      className="px-3.5 py-1.5 rounded-lg bg-red-50 text-red-700 text-xs font-bold hover:bg-red-100"
+                    >
+                      Hapus
+                    </button>
+                  </div>
                 </div>
               ))
             )}
