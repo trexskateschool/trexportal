@@ -55,45 +55,45 @@ export default function AdminDashboardPage() {
   const adminModules = [
     {
       title: "Data Murid & Kode Klaim",
-      desc: "Tambah murid baru, generate kode tautan orang tua, dan atur coach pembina.",
+      desc: "Kelola profil anggota, status aktif murid, dan kode tautan wali murid.",
       badge: "Aktif",
       href: "/admin/students",
-      active: true,
     },
     {
       title: "Tim Coach & Hak Akses",
       desc: "Atur profil pelatih, berikan izin login akun coach, dan kelola tim lapangan.",
       badge: "Aktif",
       href: "/admin/coaches",
-      active: true,
     },
     {
       title: "Jadwal Sabtu & Kurikulum",
       desc: "Buat sesi latihan Sabtu 16.00–18.00 WIB dan sinkronkan 8 materi skill.",
       badge: "Aktif",
       href: "/admin/schedules",
-      active: true,
     },
     {
       title: "Absensi & Evaluasi Lapangan",
       desc: "Catat kehadiran Sabtu dan nilai perkembangan 8 materi skill anak.",
       badge: "Aktif",
       href: "/coach/attendance",
-      active: true,
     },
     {
       title: "Rapor Bulanan & Publikasi",
       desc: "Tinjau catatan evaluasi coach dan terbitkan rapor ke portal orang tua.",
       badge: "Aktif",
       href: "/coach/reports",
-      active: true,
     },
     {
       title: "Verifikasi Pembayaran",
       desc: "Periksa konfirmasi transfer pendaftaran & daftar ulang, lalu aktifkan status murid.",
       badge: "Aktif",
       href: "/admin/payments",
-      active: true,
+    },
+    {
+      title: "Pengumuman & Kompetisi",
+      desc: "Publikasikan info latihan Sabtu dan agenda lomba ke portal orang tua.",
+      badge: "Aktif",
+      href: "/admin/announcements",
     },
   ];
 
