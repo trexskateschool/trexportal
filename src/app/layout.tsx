@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { AuthProvider } from "@/context/AuthContext";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -13,10 +14,6 @@ export const metadata: Metadata = {
   title: "TREX Skate School | Klub & Akademi Sepatu Roda Anak",
   description:
     "Platform manajemen latihan, pemantauan perkembangan mingguan, dan rapor digital murid TREX Skate School.",
-  icons: {
-    icon: "/logo.jpg",
-    apple: "/logo.jpg",
-  },
 };
 
 export const viewport: Viewport = {
@@ -33,9 +30,11 @@ export default function RootLayout({
   return (
     <html lang="id" className={inter.className}>
       <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased overflow-x-hidden">
-        <Navbar />
-        <main className="flex-1 w-full">{children}</main>
-        <Footer />
+        <AuthProvider>
+          <Navbar />
+          <main className="flex-1 w-full">{children}</main>
+          <Footer />
+        </AuthProvider>
       </body>
     </html>
   );
