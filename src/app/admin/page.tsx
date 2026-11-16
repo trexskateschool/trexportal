@@ -8,44 +8,24 @@ import { useAuth } from "@/context/AuthContext";
 import RoleGuard from "@/components/RoleGuard";
 
 export default function AdminDashboardPage() {
-  const { userProfile } = useAuth();
-  const [stats, setStats] = useState({
-    totalStudents: 0,
-    activeStudents: 0,
-    totalCoaches: 0,
-    pendingPayments: 0,
-  });
-  const [loadingStats, setLoadingStats] = useState(true);
+  const { firebaseUser, userProfile } = useAuth();
+  const [pendingPaymentsCount, setPendingPaymentsCount] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchAdminSummary() {
       try {
-        const [studentsSnap, coachesSnap, pendingPaySnap] = await Promise.all([
-          getDocs(collection(db, "students")),
-          getDocs(collection(db, "coaches")),
-          getDocs(
-            query(
-              collection(db, "payments"),
-              where("status", "==", "pending_verification")
-            )
-          ),
-        ]);
-
-        let activeCount = 0;
-        studentsSnap.forEach((docSnap) => {
-          if (docSnap.data().status === "active") activeCount += 1;
-        });
-
-        setStats({
-          totalStudents: studentsSnap.size,
-          activeStudents: activeCount,
-          totalCoaches: coachesSnap.size,
-          pendingPayments: pendingPaySnap.size,
-        });
+        const pendingPaySnap = await getDocs(
+          query(
+            collection(db, "payments"),
+            where("status", "==", "pending_verification")
+          )
+        );
+        setPendingPaymentsCount(pendingPaySnap.size);
       } catch (error) {
         console.error("Gagal memuat ringkasan admin:", error);
       } finally {
-        setLoadingStats(false);
+        setLoading(false);
       }
     }
 
@@ -112,8 +92,10 @@ export default function AdminDashboardPage() {
                   Selamat Datang, {userProfile?.name || "Admin"}
                 </h1>
                 <p className="text-sm text-slate-300 mt-1">
-                  Pusat kendali operasional murid, jadwal latihan Sabtu, rapor,
-                  dan administrasi klub.
+                  Masuk dengan email terdaftar:{" "}
+                  <strong className="text-lime-400 font-mono">
+                    {firebaseUser?.email}
+                  </strong>
                 </p>
               </div>
 
@@ -125,43 +107,32 @@ export default function AdminDashboardPage() {
               </Link>
             </div>
 
-            {/* Ringkasan Statistik */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mt-7">
+            {/* Ringkasan Akun & Verifikasi */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-7">
               <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
                 <p className="text-xs text-slate-400 font-medium">
-                  Total Murid
+                  Status Akses Admin
                 </p>
-                <p className="text-2xl sm:text-3xl font-black text-white mt-1">
-                  {loadingStats ? "..." : stats.totalStudents}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
-                <p className="text-xs text-slate-400 font-medium">
-                  Murid Aktif
-                </p>
-                <p className="text-2xl sm:text-3xl font-black text-lime-400 mt-1">
-                  {loadingStats ? "..." : stats.activeStudents}
-                </p>
-              </div>
-
-              <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
-                <p className="text-xs text-slate-400 font-medium">Tim Coach</p>
-                <p className="text-2xl sm:text-3xl font-black text-white mt-1">
-                  {loadingStats ? "..." : stats.totalCoaches}
+                <p className="text-lg font-black text-lime-400 mt-1">
+                  Aktif &amp; Terverifikasi
                 </p>
               </div>
 
               <Link
                 href="/admin/payments"
-                className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 hover:border-amber-400 transition-colors"
+                className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 hover:border-amber-400 transition-colors flex items-center justify-between"
               >
-                <p className="text-xs text-slate-400 font-medium">
-                  Cek Pembayaran
-                </p>
-                <p className="text-2xl sm:text-3xl font-black text-amber-400 mt-1">
-                  {loadingStats ? "..." : stats.pendingPayments}
-                </p>
+                <div>
+                  <p className="text-xs text-slate-400 font-medium">
+                    Pembayaran Menunggu Verifikasi
+                  </p>
+                  <p className="text-2xl font-black text-amber-400 mt-1">
+                    {loading ? "..." : pendingPaymentsCount} Transaksi
+                  </p>
+                </div>
+                <span className="text-xs font-bold text-slate-300 underline">
+                  Periksa →
+                </span>
               </Link>
             </div>
           </div>
