@@ -66,11 +66,7 @@ export default function HomePortalGatewayPage() {
             </div>
           </div>
 
-          <div className="text-xs sm:text-sm text-slate-300 bg-slate-900 border border-slate-800 px-4 py-2.5 rounded-xl">
-            Jadwal Rutin:{" "}
-            <strong className="text-lime-400">Sabtu, 16.00 – 18.00 WIB</strong>
-          </div>
-        </div>
+    
 
         {/* Banner Jika Pengguna Sudah Login */}
         {!loading && firebaseUser && userProfile && (
