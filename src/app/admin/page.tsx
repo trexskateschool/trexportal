@@ -90,10 +90,10 @@ export default function AdminDashboardPage() {
     },
     {
       title: "Verifikasi Pembayaran",
-      desc: "Periksa bukti transfer pendaftaran & daftar ulang, lalu aktifkan status murid.",
-      badge: "Fase 7",
-      href: "/admin",
-      active: false,
+      desc: "Periksa konfirmasi transfer pendaftaran & daftar ulang, lalu aktifkan status murid.",
+      badge: "Aktif",
+      href: "/admin/payments",
+      active: true,
     },
   ];
 
@@ -152,14 +152,17 @@ export default function AdminDashboardPage() {
                 </p>
               </div>
 
-              <div className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700">
+              <Link
+                href="/admin/payments"
+                className="p-4 rounded-2xl bg-slate-800/90 border border-slate-700 hover:border-amber-400 transition-colors"
+              >
                 <p className="text-xs text-slate-400 font-medium">
                   Cek Pembayaran
                 </p>
                 <p className="text-2xl sm:text-3xl font-black text-amber-400 mt-1">
                   {loadingStats ? "..." : stats.pendingPayments}
                 </p>
-              </div>
+              </Link>
             </div>
           </div>
         </div>
@@ -174,28 +177,16 @@ export default function AdminDashboardPage() {
               <Link
                 key={mod.title}
                 href={mod.href}
-                className={`p-5 rounded-2xl bg-white border transition-all flex flex-col justify-between ${
-                  mod.active
-                    ? "border-slate-300 hover:border-lime-500 shadow-xs"
-                    : "border-slate-200/80 opacity-75"
-                }`}
+                className="p-5 rounded-2xl bg-white border border-slate-300 hover:border-lime-500 shadow-xs transition-all flex flex-col justify-between"
               >
                 <div>
                   <div className="flex items-center justify-between gap-2 mb-3">
-                    <span
-                      className={`text-[11px] font-extrabold px-2.5 py-0.5 rounded-md ${
-                        mod.active
-                          ? "bg-lime-400 text-slate-950"
-                          : "bg-slate-900 text-lime-400"
-                      }`}
-                    >
+                    <span className="text-[11px] font-extrabold px-2.5 py-0.5 rounded-md bg-lime-400 text-slate-950">
                       {mod.badge}
                     </span>
-                    {mod.active && (
-                      <span className="text-xs font-extrabold text-slate-900">
-                        Buka →
-                      </span>
-                    )}
+                    <span className="text-xs font-extrabold text-slate-900">
+                      Buka →
+                    </span>
                   </div>
                   <h3 className="text-base font-extrabold text-slate-900">
                     {mod.title}
