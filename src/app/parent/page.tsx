@@ -1,14 +1,19 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import {
   collection,
+  doc,
+  getDoc,
   getDocs,
   query,
   where,
   orderBy,
   limit,
+  updateDoc,
+  arrayUnion,
+  serverTimestamp,
 } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { useAuth } from "@/context/AuthContext";
@@ -52,6 +57,13 @@ export default function ParentPortalPage() {
   const [loadingChildren, setLoadingChildren] = useState(true);
   const [fetchError, setFetchError] = useState("");
   const [announcements, setAnnouncements] = useState<AnnouncementBanner[]>([]);
+
+  // State Kolom Klaim Anak
+  const [claimInput, setClaimInput] = useState("");
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState("");
+  const [claimSuccess, setClaimSuccess] = useState("");
+  const [showClaimBox, setShowClaimBox] = useState(false);
 
   // Detail data anak terpilih
   const [reports, setReports] = useState<MonthlyReport[]>([]);
@@ -194,6 +206,66 @@ export default function ParentPortalPage() {
     fetchChildRecords();
   }, [selectedChildId]);
 
+  const handleClaimStudent = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!firebaseUser) return;
+
+    const cleanCode = claimInput.trim().toUpperCase();
+    if (cleanCode.length < 4) {
+      setClaimError("Masukkan 6 karakter Kode Klaim yang valid.");
+      return;
+    }
+
+    setClaiming(true);
+    setClaimError("");
+    setClaimSuccess("");
+
+    try {
+      const codeRef = doc(db, "claimCodes", cleanCode);
+      const codeSnap = await getDoc(codeRef);
+
+      if (!codeSnap.exists()) {
+        setClaimError("Kode Klaim tidak ditemukan di sistem.");
+        setClaiming(false);
+        return;
+      }
+
+      const codeData = codeSnap.data();
+      if (codeData.isClaimed) {
+        setClaimError("Kode Klaim ini sudah pernah digunakan.");
+        setClaiming(false);
+        return;
+      }
+
+      const studentId = codeData.studentId as string;
+
+      // Tautkan akun orang tua ke dokumen murid
+      await updateDoc(doc(db, "students", studentId), {
+        parentUids: arrayUnion(firebaseUser.uid),
+        updatedAt: serverTimestamp(),
+      });
+
+      // Tandai kode klaim sudah terpakai
+      await updateDoc(codeRef, {
+        isClaimed: true,
+        claimedBy: firebaseUser.uid,
+      });
+
+      setClaimInput("");
+      setShowClaimBox(false);
+      setClaimSuccess(
+        `Profil ananda ${codeData.studentName} berhasil diklaim dan masuk dashboard!`
+      );
+      await fetchMyChildren();
+      setSelectedChildId(studentId);
+    } catch (error) {
+      console.error("Gagal menautkan kode klaim:", error);
+      setClaimError("Gagal memproses klaim anak. Periksa koneksi Anda.");
+    } finally {
+      setClaiming(false);
+    }
+  };
+
   const activeChild =
     children.find((c) => c.id === selectedChildId) || children[0];
 
@@ -229,12 +301,17 @@ export default function ParentPortalPage() {
                 >
                   Konfirmasi Pembayaran
                 </Link>
-                <Link
-                  href="/daftar"
-                  className="text-xs font-extrabold px-3 py-1.5 rounded-lg bg-lime-400 hover:bg-lime-300 text-slate-950 transition-colors"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowClaimBox(!showClaimBox);
+                    setClaimError("");
+                    setClaimSuccess("");
+                  }}
+                  className="text-xs font-bold px-3 py-1.5 rounded-lg bg-lime-400 hover:bg-lime-300 text-slate-950 transition-colors"
                 >
-                  + Daftarkan Anak
-                </Link>
+                  {showClaimBox ? "Tutup Kolom Klaim" : "+ Klaim Anak (Kode)"}
+                </button>
               </div>
             </div>
 
@@ -249,6 +326,51 @@ export default function ParentPortalPage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-6 space-y-6">
+          {/* Kolom Klaim Anak */}
+          {showClaimBox && (
+            <div className="p-6 rounded-2xl bg-white border border-lime-400 shadow-sm space-y-4">
+              <div>
+                <span className="text-[11px] font-extrabold px-2 py-0.5 rounded bg-lime-100 text-slate-950">
+                  HUBUNGKAN PROFIL ANAK
+                </span>
+                <h2 className="text-lg font-black text-slate-900 mt-2">
+                  Masukkan 6 Karakter Kode Klaim
+                </h2>
+                <p className="text-xs text-slate-600 mt-0.5">
+                  Jika data anak belum tampil otomatis, masukkan kode klaim yang diberikan oleh Admin untuk mengakses dashboard anak.
+                </p>
+              </div>
+
+              {claimError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-800 font-medium">
+                  {claimError}
+                </div>
+              )}
+
+              <form
+                onSubmit={handleClaimStudent}
+                className="flex flex-col sm:flex-row gap-3"
+              >
+                <input
+                  type="text"
+                  maxLength={8}
+                  required
+                  value={claimInput}
+                  onChange={(e) => setClaimInput(e.target.value.toUpperCase())}
+                  placeholder="CONTOH: TRX8K2"
+                  className="flex-1 px-4 py-3 rounded-xl border border-slate-300 font-mono text-base font-black tracking-widest uppercase text-slate-900 focus:outline-none focus:ring-2 focus:ring-lime-500"
+                />
+                <button
+                  type="submit"
+                  disabled={claiming}
+                  className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-lime-400 font-extrabold text-sm transition-colors disabled:opacity-60"
+                >
+                  {claiming ? "Memverifikasi..." : "Klaim & Masuk Dashboard"}
+                </button>
+              </form>
+            </div>
+          )}
+
           {/* Pengumuman Klub Terbaru */}
           {announcements.length > 0 && (
             <div className="space-y-2.5">
@@ -293,6 +415,12 @@ export default function ParentPortalPage() {
             </div>
           )}
 
+          {claimSuccess && (
+            <div className="p-4 rounded-xl bg-lime-100 border border-lime-400 text-slate-950 text-sm font-bold">
+              ✓ {claimSuccess}
+            </div>
+          )}
+
           {loadingChildren ? (
             <div className="p-8 rounded-2xl bg-white border border-slate-200 text-center text-sm text-slate-600">
               Memuat profil anak yang terhubung...
@@ -303,12 +431,18 @@ export default function ParentPortalPage() {
                 Belum Ada Data Anak di Akun Ini
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed">
-                Jika Anda baru saja mengisi formulir pendaftaran, tekan tombol{" "}
-                <strong>Muat Ulang Data</strong> di bawah atau daftarkan anak
-                Anda sekarang.
+                Jika Anda memiliki kode klaim dari Admin, silakan ketuk tombol{" "}
+                <strong>+ Klaim Anak (Kode)</strong> di atas untuk masuk ke dashboard.
               </p>
 
               <div className="flex flex-wrap gap-3 pt-1">
+                <button
+                  type="button"
+                  onClick={() => setShowClaimBox(true)}
+                  className="px-5 py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-extrabold text-xs sm:text-sm"
+                >
+                  + Masukkan Kode Klaim Anak
+                </button>
                 <button
                   type="button"
                   onClick={fetchMyChildren}
@@ -316,12 +450,6 @@ export default function ParentPortalPage() {
                 >
                   Muat Ulang Data
                 </button>
-                <Link
-                  href="/daftar"
-                  className="px-5 py-3 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-extrabold text-xs sm:text-sm"
-                >
-                  + Daftarkan Anak Sekarang
-                </Link>
               </div>
             </div>
           ) : (
