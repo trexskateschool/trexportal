@@ -9,6 +9,8 @@ import {
   getDocs,
   query,
   where,
+  orderBy,
+  limit,
   updateDoc,
   arrayUnion,
   serverTimestamp,
@@ -40,12 +42,21 @@ const MONTH_NAMES = [
   "Desember",
 ];
 
+interface AnnouncementBanner {
+  id: string;
+  title: string;
+  category: "training" | "competition" | "general";
+  eventDate: string;
+  content: string;
+}
+
 export default function ParentPortalPage() {
   const { firebaseUser, userProfile } = useAuth();
   const [children, setChildren] = useState<StudentProfile[]>([]);
   const [selectedChildId, setSelectedChildId] = useState("");
   const [loadingChildren, setLoadingChildren] = useState(true);
   const [fetchError, setFetchError] = useState("");
+  const [announcements, setAnnouncements] = useState<AnnouncementBanner[]>([]);
 
   // State Kode Klaim (cadangan jika murid didaftarkan manual oleh Admin)
   const [claimInput, setClaimInput] = useState("");
@@ -69,20 +80,40 @@ export default function ParentPortalPage() {
     setFetchError("");
 
     try {
-      const q = query(
-        collection(db, "students"),
-        where("parentUids", "array-contains", firebaseUser.uid)
-      );
-      const snap = await getDocs(q);
+      const [childSnap, annSnap] = await Promise.all([
+        getDocs(
+          query(
+            collection(db, "students"),
+            where("parentUids", "array-contains", firebaseUser.uid)
+          )
+        ),
+        getDocs(
+          query(
+            collection(db, "announcements"),
+            orderBy("eventDate", "desc"),
+            limit(2)
+          )
+        ),
+      ]);
+
       const list: StudentProfile[] = [];
-      snap.forEach((docSnap) => {
+      childSnap.forEach((docSnap) => {
         list.push({
           id: docSnap.id,
           ...(docSnap.data() as Omit<StudentProfile, "id">),
         });
       });
 
+      const annList: AnnouncementBanner[] = [];
+      annSnap.forEach((d) => {
+        annList.push({
+          id: d.id,
+          ...(d.data() as Omit<AnnouncementBanner, "id">),
+        });
+      });
+
       setChildren(list);
+      setAnnouncements(annList);
       if (list.length > 0 && !selectedChildId) {
         setSelectedChildId(list[0].id);
       } else if (list.length > 0 && !list.some((c) => c.id === selectedChildId)) {
@@ -299,6 +330,37 @@ export default function ParentPortalPage() {
         </div>
 
         <div className="max-w-4xl mx-auto px-4 sm:px-6 mt-6 space-y-6">
+          {/* Pengumuman Klub Terbaru */}
+          {announcements.length > 0 && (
+            <div className="space-y-2.5">
+              {announcements.map((ann) => (
+                <div
+                  key={ann.id}
+                  className="p-4 rounded-2xl bg-blue-950 text-white border border-blue-800 flex flex-col sm:flex-row sm:items-center justify-between gap-2"
+                >
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] font-extrabold px-2 py-0.5 rounded bg-lime-400 text-slate-950 uppercase">
+                        {ann.category === "competition"
+                          ? "Agenda Lomba"
+                          : ann.category === "training"
+                          ? "Info Latihan"
+                          : "Info Klub"}
+                      </span>
+                      <span className="text-xs text-blue-200">
+                        {ann.eventDate}
+                      </span>
+                    </div>
+                    <p className="text-sm font-black mt-1">{ann.title}</p>
+                    <p className="text-xs text-blue-100 mt-0.5">
+                      {ann.content}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
           {fetchError && (
             <div className="p-4 rounded-xl bg-red-50 border border-red-200 text-red-800 text-xs sm:text-sm font-medium flex items-center justify-between gap-3">
               <span>{fetchError}</span>
