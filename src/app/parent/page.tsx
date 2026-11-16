@@ -261,7 +261,13 @@ export default function ParentPortalPage() {
                 Portal Privat Orang Tua / Wali
               </span>
 
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
+                <Link
+                  href="/parent/payment"
+                  className="text-xs font-extrabold px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors"
+                >
+                  Konfirmasi Pembayaran
+                </Link>
                 <Link
                   href="/daftar"
                   className="text-xs font-extrabold px-3 py-1.5 rounded-lg bg-lime-400 hover:bg-lime-300 text-slate-950 transition-colors"
@@ -277,7 +283,7 @@ export default function ParentPortalPage() {
                   }}
                   className="text-xs font-bold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition-colors"
                 >
-                  {showClaimBox ? "Tutup Kode" : "Punya Kode Klaim?"}
+                  {showClaimBox ? "Tutup Kode" : "Kode Klaim"}
                 </button>
               </div>
             </div>
@@ -352,16 +358,14 @@ export default function ParentPortalPage() {
               Memuat profil anak yang terhubung...
             </div>
           ) : children.length === 0 ? (
-            /* Jika Belum Ada Data Anak Terhubung */
             <div className="p-6 sm:p-8 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-4">
               <h2 className="text-xl font-black text-slate-900">
                 Belum Ada Data Anak di Akun Ini
               </h2>
               <p className="text-sm text-slate-600 leading-relaxed">
                 Jika Anda baru saja mengisi formulir pendaftaran, tekan tombol{" "}
-                <strong>Muat Ulang Data</strong> di bawah. Jika belum
-                mendaftarkan anak dengan akun ini, silakan ketuk{" "}
-                <strong>Daftarkan Anak Sekarang</strong>.
+                <strong>Muat Ulang Data</strong> di bawah atau daftarkan anak
+                Anda sekarang.
               </p>
 
               <div className="flex flex-wrap gap-3 pt-1">
@@ -383,7 +387,6 @@ export default function ParentPortalPage() {
           ) : (
             activeChild && (
               <>
-                {/* Selector Jika Lebih dari 1 Anak */}
                 {children.length > 1 && (
                   <div className="flex flex-wrap gap-2">
                     {children.map((child) => (
@@ -429,6 +432,21 @@ export default function ParentPortalPage() {
                     Level: <strong>{activeChild.level}</strong> • Coach Pembina:{" "}
                     <strong>{activeChild.coachName || "Tim Coach TREX"}</strong>
                   </p>
+
+                  {activeChild.status !== "active" && (
+                    <div className="mt-4 p-3.5 rounded-xl bg-amber-50 border border-amber-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs text-amber-950">
+                      <span>
+                        Status keanggotaan menunggu verifikasi pembayaran
+                        pendaftaran.
+                      </span>
+                      <Link
+                        href="/parent/payment"
+                        className="font-extrabold underline shrink-0"
+                      >
+                        Kirim Konfirmasi Transfer →
+                      </Link>
+                    </div>
+                  )}
 
                   <div className="mt-5 pt-4 border-t border-slate-100 grid grid-cols-3 gap-3 text-center sm:text-left">
                     <div>
