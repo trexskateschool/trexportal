@@ -1,6 +1,6 @@
-import { initializeApp, getApps, getApp } from "firebase/app";
-import { getAuth } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { initializeApp, getApps, getApp, FirebaseApp } from "firebase/app";
+import { getAuth, Auth } from "firebase/auth";
+import { getFirestore, Firestore } from "firebase/firestore";
 
 const firebaseConfig = {
   apiKey: process.env.NEXT_PUBLIC_FIREBASE_API_KEY,
@@ -27,8 +27,20 @@ export function checkFirebaseEnv() {
   };
 }
 
-const app = getApps().length > 0 ? getApp() : initializeApp(firebaseConfig);
-const auth = getAuth(app);
-const db = getFirestore(app);
+const safeConfig = firebaseConfig.apiKey
+  ? firebaseConfig
+  : {
+      apiKey: "placeholder-api-key",
+      authDomain: "placeholder.firebaseapp.com",
+      projectId: "placeholder-project",
+      storageBucket: "placeholder.appspot.com",
+      messagingSenderId: "000000000000",
+      appId: "1:000000000000:web:000000000000",
+    };
+
+const app: FirebaseApp =
+  getApps().length > 0 ? getApp() : initializeApp(safeConfig);
+const auth: Auth = getAuth(app);
+const db: Firestore = getFirestore(app);
 
 export { app, auth, db };
