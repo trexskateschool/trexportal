@@ -1,6 +1,8 @@
 import type { Metadata, Viewport } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -8,9 +10,13 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "TREX Skate School | Digital Management System",
+  title: "TREX Skate School | Klub & Akademi Sepatu Roda Anak",
   description:
-    "Platform manajemen latihan sepatu roda, pemantauan perkembangan anak, dan rapor digital TREX Skate School.",
+    "Platform manajemen latihan, pemantauan perkembangan mingguan, dan rapor digital murid TREX Skate School.",
+  icons: {
+    icon: "/logo.jpg",
+    apple: "/logo.jpg",
+  },
 };
 
 export const viewport: Viewport = {
@@ -26,8 +32,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" className={inter.className}>
-      <body className="min-h-screen bg-slate-50 text-slate-900 antialiased overflow-x-hidden">
-        {children}
+      <body className="min-h-screen flex flex-col bg-slate-50 text-slate-900 antialiased overflow-x-hidden">
+        <Navbar />
+        <main className="flex-1 w-full">{children}</main>
+        <Footer />
       </body>
     </html>
   );
