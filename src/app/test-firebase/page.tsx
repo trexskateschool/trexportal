@@ -2,12 +2,22 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { collection, doc, setDoc, getDoc, serverTimestamp } from "firebase/firestore";
+import {
+  collection,
+  doc,
+  setDoc,
+  getDoc,
+  serverTimestamp,
+} from "firebase/firestore";
 import { db, auth, checkFirebaseEnv } from "@/lib/firebase";
 
 export default function TestFirebasePage() {
-  const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
-  const [message, setMessage] = useState("Menguji koneksi ke server Firebase...");
+  const [status, setStatus] = useState<"loading" | "success" | "error">(
+    "loading"
+  );
+  const [message, setMessage] = useState(
+    "Menguji koneksi ke server Firebase..."
+  );
   const [details, setDetails] = useState<{
     projectId: string;
     authReady: boolean;
@@ -26,7 +36,9 @@ export default function TestFirebasePage() {
 
       if (!envCheck.isValid) {
         setStatus("error");
-        setMessage("Environment Variables Firebase di Vercel belum lengkap.");
+        setMessage(
+          "Environment Variables Firebase di Vercel belum lengkap."
+        );
         setDetails({
           projectId: envCheck.projectId,
           authReady: false,
@@ -39,7 +51,6 @@ export default function TestFirebasePage() {
       try {
         const authReady = Boolean(auth && auth.app);
 
-        // Uji tulis & baca ke koleksi _systemCheck di Firestore
         const testDocRef = doc(collection(db, "_systemCheck"), "ping");
         await setDoc(testDocRef, {
           status: "connected",
@@ -51,7 +62,9 @@ export default function TestFirebasePage() {
 
         if (snap.exists()) {
           setStatus("success");
-          setMessage("Koneksi Next.js, Authentication, dan Cloud Firestore berhasil!");
+          setMessage(
+            "Koneksi Next.js, Authentication, dan Cloud Firestore berhasil!"
+          );
           setDetails({
             projectId: envCheck.projectId,
             authReady,
@@ -63,7 +76,9 @@ export default function TestFirebasePage() {
         }
       } catch (err: unknown) {
         const errorMessage =
-          err instanceof Error ? err.message : "Gagal terhubung ke Firestore.";
+          err instanceof Error
+            ? err.message
+            : "Gagal terhubung ke Firestore.";
         setStatus("error");
         setMessage(errorMessage);
         setDetails({
@@ -155,7 +170,7 @@ export default function TestFirebasePage() {
           </div>
         </div>
 
-        {/* Daftar Env yang Kurang (jika ada) */}
+        {/* Daftar Env yang Kurang */}
         {details.missingVars.length > 0 && (
           <div className="mt-5 p-4 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-950">
             <p className="font-bold mb-1">
