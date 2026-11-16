@@ -35,7 +35,7 @@ const AuthContext = createContext<AuthContextType>({
 // ==========================================
 const ADMIN_WHITELIST = [
   "admin@trexskateschool.com",
-  "wotayuduing@gmail.com", // Masukkan email Anda di sini
+  "krisnaoktaria.com", // Masukkan email Anda di sini
 ];
 
 const COACH_WHITELIST = [
