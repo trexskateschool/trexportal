@@ -1,0 +1,150 @@
+"use client";
+
+import { useState } from "react";
+import Link from "next/link";
+import BrandLogo from "@/components/BrandLogo";
+
+export default function RegisterPage() {
+  const [submitted, setSubmitted] = useState(false);
+  const [formData, setFormData] = useState({
+    childName: "",
+    age: "",
+    parentName: "",
+    whatsapp: "",
+    level: "Pemula (Belum Bisa Sama Sekali)",
+  });
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    // TODO: Sambungkan ke Firestore (collection "registrations")
+    setSubmitted(true);
+  };
+
+  return (
+    <main className="min-h-screen bg-slate-950 text-white py-10 px-4">
+      <div className="max-w-xl mx-auto">
+        <div className="flex items-center justify-between pb-6 border-b border-slate-800">
+          <div className="flex items-center gap-3">
+            <BrandLogo size="md" />
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-wider text-lime-400">
+                TREX SKATE SCHOOL
+              </p>
+              <h1 className="text-lg font-black text-white">
+                Formulir Pendaftaran Murid Baru
+              </h1>
+            </div>
+          </div>
+          <Link
+            href="/"
+            className="text-xs font-bold text-slate-400 hover:text-white"
+          >
+            ← Kembali
+          </Link>
+        </div>
+
+        {submitted ? (
+          <div className="mt-8 p-6 rounded-3xl bg-slate-900 border border-lime-400/50 text-center">
+            <div className="w-12 h-12 rounded-full bg-lime-400 text-slate-950 font-black flex items-center justify-center mx-auto text-xl">
+              ✓
+            </div>
+            <h2 className="text-xl font-black text-white mt-4">
+              Pendaftaran Terkirim!
+            </h2>
+            <p className="text-sm text-slate-400 mt-2">
+              Data calon murid <span className="text-white font-bold">{formData.childName}</span> sudah dicatat. Admin TREX Skate School akan menghubungi nomor WhatsApp Anda.
+            </p>
+            <Link
+              href="/"
+              className="inline-block mt-6 px-6 py-3 rounded-xl bg-lime-400 text-slate-950 text-sm font-black"
+            >
+              Kembali ke Beranda
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                Nama Lengkap Anak
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Contoh: Arka Pratama"
+                value={formData.childName}
+                onChange={(e) => setFormData({ ...formData, childName: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-lime-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                Usia Anak (Tahun)
+              </label>
+              <input
+                type="number"
+                required
+                min={3}
+                max={18}
+                placeholder="Contoh: 7"
+                value={formData.age}
+                onChange={(e) => setFormData({ ...formData, age: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-lime-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                Nama Orang Tua / Wali
+              </label>
+              <input
+                type="text"
+                required
+                placeholder="Nama lengkap wali murid"
+                value={formData.parentName}
+                onChange={(e) => setFormData({ ...formData, parentName: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-lime-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                Nomor WhatsApp Aktif
+              </label>
+              <input
+                type="tel"
+                required
+                placeholder="08xxxxxxxxxx"
+                value={formData.whatsapp}
+                onChange={(e) => setFormData({ ...formData, whatsapp: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-lime-400"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-300 mb-1.5">
+                Pengalaman Sepatu Roda Saat Ini
+              </label>
+              <select
+                value={formData.level}
+                onChange={(e) => setFormData({ ...formData, level: e.target.value })}
+                className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-slate-800 text-sm text-white focus:outline-none focus:border-lime-400"
+              >
+                <option>Pemula (Belum Bisa Sama Sekali)</option>
+                <option>Dasar (Sudah Bisa Berdiri & Jalan Pelan)</option>
+                <option>Menengah (Sudah Lancar Meluncur & Rem)</option>
+              </select>
+            </div>
+
+            <button
+              type="submit"
+              className="w-full mt-4 py-3.5 rounded-xl bg-lime-400 hover:bg-lime-300 text-slate-950 font-black text-sm transition-colors"
+            >
+              Kirim Pendaftaran →
+            </button>
+          </form>
+        )}
+      </div>
+    </main>
+  );
+}
